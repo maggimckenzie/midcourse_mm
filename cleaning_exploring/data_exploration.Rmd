@@ -1,0 +1,49 @@
+---
+title: "data_exploration"
+author: "mmckenzie"
+date: "1/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+clues <- read.csv('data/j_clues_02.csv')
+clues
+```
+
+```{r}
+categories <- clues %>% 
+  group_by(category) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  rename(num_clues = n)
+categories
+```
+
+```{r}
+top20 <- categories %>% 
+  arrange(desc(num_clues)) %>% 
+  head(20)
+top20
+```
+
+```{r}
+answers <- clues %>% 
+  group_by(corr_resp) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  rename(num_resp = n) %>% 
+  filter(num_resp > 2)
+
+answers
+```
+
