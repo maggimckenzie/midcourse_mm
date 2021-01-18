@@ -1,0 +1,106 @@
+---
+title: "viz_scratchpad"
+author: "mmckenzie"
+date: "1/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(ggplot2)
+library(stringr)
+library(lubridate)
+#library(hrbrthemes)
+```
+
+Raw game scores
+```{r raw_scores}
+game_scores <- read.csv('../data/j_scores.csv')
+game_scores %>% head(20)
+summary(game_scores)
+```
+
+FJ filtered scores
+```{r fj_scores}
+#select and filter
+fj_win_scores <- game_scores %>% 
+  select(round_code, show_num, contestant, score, finish) %>% 
+  filter(finish == 'Winner', round_code == 'FJ')
+
+fj_win_scores <- fj_win_scores %>% 
+  mutate(bucket = score - (score %% 10000))
+```
+
+Raw game/clue data
+```{r raw_game}
+game_data <- read.csv('../data/j_clues.csv')
+```
+
+Filter for air_dates
+```{r air_dates}
+game_dates <- game_data %>% 
+  select(season, show_num, air_date) %>% 
+  count(season, show_num, air_date, name = 'clue_count')
+  
+```
+
+Join the winners and air dates
+```{r merge_airdates}
+fj_win_scores <- fj_win_scores %>% 
+  inner_join(game_dates, by = 'show_num')
+
+fj_win_scores <- fj_win_scores %>% 
+  mutate(air_year = format(as.Date(air_date, format = '%m/%d/%Y'),'%Y'))
+
+fj_win_scores <-fj_win_scores %>% 
+  mutate(bucket_name = as.character(bucket / 1000)) %>% 
+  mutate(bucket_name = paste('$',bucket_name))
+
+write.csv(fj_win_scores, '../data/fj_win_scores.csv', row.names=FALSE)
+
+```
+
+
+Plot the distribution of scores
+```{r score_dist}
+fj_win_scores %>% 
+  select(show_num, season, air_year, contestant, bucket_name, score) %>% 
+  ggplot(aes(y = air_year, x = score, color = bucket_name)) +
+  geom_point()+
+  scale_x_continuous(breaks=seq(0, 150000, 10000)) +
+  theme(axis.text.x = element_text(angle= 90))
+
+```
+
+
+```{r}
+fj_win_scores %>% 
+  select(air_year, bucket_name) %>% 
+  count(air_year, bucket_name, name = 'num_games') %>% 
+  ggplot(aes(x = air_year, y = num_games, fill = bucket_name)) +
+  geom_bar(position = "stack", stat="identity")+
+  coord_flip()
+  #scale_y_discrete()
+  #theme(axis.text.x = element_text(angle= 90))
+```
+
+
+
+
+
+
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
