@@ -82,13 +82,74 @@ fj_win_scores %>%
   ggplot(aes(x = air_year, y = num_games, fill = bucket_name)) +
   geom_bar(position = "stack", stat="identity")+
   coord_flip()
+
   #scale_y_discrete()
   #theme(axis.text.x = element_text(angle= 90))
 ```
 
+Category explorer
+```{r category_exp}
+#clues <- read.csv('../data/j_clues.csv')
+distinct_cat <- clues %>% 
+  distinct(show_num, air_date, round_code, category)
+
+cat_occurs <- distinct_cat %>% 
+  count(category, name = 'occurs') %>% 
+  arrange(desc(occurs))
+
+#fj_win_scores <- read.csv('../data/fj_win_scores.csv')
+
+games <- fj_win_scores %>% 
+  count()
+
+cat_occurs <- cat_occurs %>% 
+  mutate(pct_of_games = as.integer(occurs / 6293 * 10000)/100)
+```
+
+
+Attempt a circle graph, this will not be pretty
+```{r circle_stuff}
+library(packcircles)
+library(viridis)
+library(ggiraph)
+```
+```{r}
+cat_occurs_gt1 <- cat_occurs %>% 
+  filter(occurs >= 100) %>% 
+  mutate(occurs_wt = occurs ** 3) %>% 
+  arrange(category)
+
+cat_occurs_gt1$text <- paste('Category: ',cat_occurs_gt1$category, '\n', 'Games Appearing: ',cat_occurs_gt1$occurs, '\n', 'Pct of Games: ', cat_occurs_gt1$pct_of_games)
+
+
+packing <- circleProgressiveLayout(cat_occurs_gt1$occurs_wt, sizetype = 'area')
+packing$radius <- 0.95 * packing$radius
 
 
 
+cat_occurs_gt1 <- cbind(cat_occurs_gt1, packing)
+
+cat.gg <- circleLayoutVertices(packing, npoints=50)
+
+p<- ggplot()+
+  geom_polygon_interactive(data = cat.gg, aes(x, y, group = id, fill = id, tooltip = cat_occurs_gt1$text[id], data_id = id),  alpha = 0.6)+
+  scale_fill_viridis() +
+  geom_text(data = cat_occurs_gt1, aes(x, y, label = category), size=2, color='black') + 
+  theme_void()+
+  theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
+  coord_equal()
+
+widg <- ggiraph(ggobj = p#, width_svg = 10, height_svg = 10
+                )
+widg
+# ggplot() +
+#   geom_polygon(data = cat.gg, aes(x, y, group = id, fill=as.factor(id)), colour = "black", alpha = 0.6) +
+#   geom_text(data = cat_occurs_gt1, aes(x, y, size=occurs_wt,label = category)) +
+#   scale_size_continuous(range = c(1,4)) +
+#   theme_void() +
+#   theme(legend.position = 'none') + 
+#   coord_equal()
+```
 
 
 
