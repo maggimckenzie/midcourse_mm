@@ -61,6 +61,12 @@ body <- dashboardBody(
                     width = 12,
                     textOutput('placeholder_catexp')
                 )
+            ),
+            fluidRow(
+                column(
+                    width = 12,
+                    girafeOutput('plot_catexp')
+                )
             )
         ),
         
@@ -68,8 +74,22 @@ body <- dashboardBody(
             tabName = 'rsp_exp',
             fluidRow(
                 column(
+                    #style='height:10vh',
                     width = 12,
                     textOutput('placeholder_rspexp')
+                )
+            ),
+            fluidRow(
+                column(
+                    #style='height:90vh',
+                    width = 12,
+                    girafeOutput('plot_rspexp')
+                 )
+             ),
+            fluidRow(
+                column(
+                    width = 12,
+                    DT::DTOutput('dt_rsexp')
                 )
             )
         ),

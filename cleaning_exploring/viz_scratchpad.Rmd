@@ -106,6 +106,9 @@ cat_occurs <- cat_occurs %>%
   mutate(pct_of_games = as.integer(occurs / 6293 * 10000)/100)
 ```
 
+```{r save_cat_occurs}
+#write.csv(cat_occurs, '../data/cat_occurs.csv', row.names=FALSE)
+```
 
 Attempt a circle graph, this will not be pretty
 ```{r circle_stuff}
@@ -139,7 +142,7 @@ p<- ggplot()+
   theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
   coord_equal()
 
-widg <- ggiraph(ggobj = p#, width_svg = 10, height_svg = 10
+widg <- ggiraph(ggobj = p, bg='transparent'#, width_svg = 10, height_svg = 10
                 )
 widg
 # ggplot() +
@@ -151,9 +154,84 @@ widg
 #   coord_equal()
 ```
 
+Response explorer
+```{r resp_exp}
+distinct_resp <- clues %>% 
+  distinct(show_num, air_date, round_code, corr_resp)
 
+resp_occurs <- distinct_resp %>% 
+  count(corr_resp, name = 'occurs') %>% 
+  arrange(desc(occurs))
 
+#fj_win_scores <- read.csv('../data/fj_win_scores.csv')
 
+games <- fj_win_scores %>% 
+  count()
+
+resp_occurs <- resp_occurs %>% 
+  mutate(pct_of_games = as.integer(occurs / 6293 * 10000)/100)
+
+resp_occurs_gt1 <- resp_occurs %>% 
+  filter(occurs >= 100) %>% 
+  mutate(occurs_wt = occurs ** 3) %>% 
+  arrange(corr_resp)
+
+resp_occurs_gt1$text <- paste('Answer: ',resp_occurs_gt1$corr_resp, '\n', 'Games Appearing: ',resp_occurs_gt1$occurs, '\n', 'Pct of Games: ', resp_occurs_gt1$pct_of_games)
+
+packing_r <- circleProgressiveLayout(resp_occurs_gt1$occurs_wt, sizetype = 'area')
+packing_r$radius <- 0.95 * packing_r$radius
+
+resp_occurs_gt1 <- cbind(resp_occurs_gt1, packing_r)
+
+resp.gg <- circleLayoutVertices(packing_r, npoints=50)
+
+p_r<- ggplot()+
+  geom_polygon_interactive(data = resp.gg, aes(x, y, group = id, fill = id, tooltip = resp_occurs_gt1$text[id], data_id = id),  alpha = 0.6)+
+  scale_fill_viridis() +
+  geom_text(data = resp_occurs_gt1, aes(x, y, label = corr_resp), size=2, color='black') + 
+  theme_void()+
+  theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
+  coord_equal()
+
+widg_r <- ggiraph(ggobj = p_r, bg='transparent'#, width_svg = 10, height_svg = 10
+                )
+widg_r
+```
+
+write resp_occurs
+```{r}
+#write.csv(resp_occurs, '../data/resp_occurs.csv', row.names=FALSE)
+```
+
+Select all the clue texts for a particular response
+```{r clue_texts}
+clues %>% 
+  filter(corr_resp == 'Australia') %>% 
+  select(category, clue_text)
+
+```
+
+interactive example for ggiraph
+ui <- fluidPage(
+    girafeOutput("plot1"),
+    girafeOutput("plot2")
+)
+server <- function(input, output, session) {
+output$plot1 <- renderGirafe({
+        scatter <- ggplot(data,aes(x=displ,y=hwy)) +
+            geom_point_interactive(aes(tooltip=model, data_id=model))
+        x <- girafe(ggobj = scatter)
+        x
+    })
+    observeEvent(input$plot1_selected,{
+        output$plot2 <- renderGirafe({
+        react <- ggplot(data[which(data$model==input$plot1_selected),],aes(x=cty)) +
+              geom_bar()
+        y <- girafe(ggobj = react)
+        y
+        })
+    })
+}
 
 
 ## Including Plots

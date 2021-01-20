@@ -39,13 +39,45 @@ shinyServer(function(input, output) {
         'Category exploration goes here.'
     )#close placeholder_catexp
     
+    output$plot_catexp <- renderGirafe({
+        p <- ggplot()+
+            geom_polygon_interactive(data = cat.gg, aes(x, y, group = id, fill = id, tooltip = cat_occurs_gt1$text[id], data_id = id),  alpha = 0.6)+
+            scale_fill_viridis() +
+            geom_text(data = cat_occurs_gt1, aes(x, y, label = category), size=2.5, color='black') + 
+            theme_void()+
+            theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
+            coord_equal()
+        ggiraph(ggobj = p, bg = 'transparent')
+    })#close plot_catexp
     
     
-    output$placeceholder_rspexp <- renderText(
+    
+    output$placeholder_rspexp <- renderText(
         'Response exploration goes here.'
     )#close placeholder_rspexp
     
+    output$plot_rspexp <- renderGirafe({
+        p_r<- ggplot()+
+            geom_polygon_interactive(data = resp.gg, aes(x, y, group = id, fill = id, tooltip = resp_occurs_gt1$text[id], data_id = id),  alpha = 0.6)+
+            scale_fill_viridis() +
+            geom_text(data = resp_occurs_gt1, aes(x, y, label = corr_resp), size=2.5, color='black') + 
+            theme_void()+
+            theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
+            coord_equal()
+        ggiraph(ggobj = p_r, bg = 'transparent')
+    })#close plot_rspexp
     
+    observeEvent(input$Plot_rsexp_selected, {
+        output$dt_rsexp <- DT::renderDT({
+            react <- clues %>% 
+                filter(corr_resp == input$plot_rsexp_selected) #[which(clues$corr_resp==input$plot_rsexp_selected),]
+        })
+    })
+    # output$dt_rsexp <- DT::renderDT({
+    #     clues %>% 
+    #         filter(corr_resp == 'Australia') %>% 
+    #         select(category, clue_text)
+    # })
     
     output$placeholder_test <- renderText(
         'Test your knowledge goes here.'

@@ -5,8 +5,41 @@ library(plotly)
 library(ggplot2)
 library(stringr)
 library(dashboardthemes)
+library(packcircles)
+library(viridis)
+library(ggiraph)
+library(DT)
 
 fj_win_scores <- read.csv('fj_win_scores.csv')
+cat_occurs <- read.csv('cat_occurs.csv')
+resp_occurs <- read.csv('resp_occurs.csv')
+clues <- read.csv('j_clues.csv')
+
+#prepare data for cat_exp plot
+cat_occurs_gt1 <- cat_occurs %>% 
+  #filter(occurs >= 100) %>% 
+  head(35) %>% 
+  mutate(occurs_wt = occurs ** 3) %>% 
+  arrange(category)
+cat_occurs_gt1$text <- paste('Category: ',cat_occurs_gt1$category, '\n', 'Games Appearing: ',cat_occurs_gt1$occurs, '\n', 'Pct of Games: ', cat_occurs_gt1$pct_of_games)
+packing <- circleProgressiveLayout(cat_occurs_gt1$occurs_wt, sizetype = 'area')
+packing$radius <- 0.95 * packing$radius
+cat_occurs_gt1 <- cbind(cat_occurs_gt1, packing)
+cat.gg <- circleLayoutVertices(packing, npoints=50)
+
+#prepare data for resp_exp plot
+resp_occurs_gt1 <- resp_occurs %>% 
+  #filter(occurs >= 100) %>% 
+  head(35) %>% 
+  mutate(occurs_wt = occurs ** 3) %>% 
+  arrange(corr_resp)
+resp_occurs_gt1$text <- paste('Answer: ',resp_occurs_gt1$corr_resp, '\n', 'Games Appearing: ',resp_occurs_gt1$occurs, '\n', 'Pct of Games: ', resp_occurs_gt1$pct_of_games)
+packing_r <- circleProgressiveLayout(resp_occurs_gt1$occurs_wt, sizetype = 'area')
+packing_r$radius <- 0.95 * packing_r$radius
+resp_occurs_gt1 <- cbind(resp_occurs_gt1, packing_r)
+resp.gg <- circleLayoutVertices(packing_r, npoints=50)
+
+
 
 custom_colors<-c("#e4941b",
                  "#a8948a",
