@@ -233,6 +233,34 @@ output$plot1 <- renderGirafe({
     })
 }
 
+```{r}
+
+catyr_occurs <- distinct_cat %>% 
+  mutate(air_year = format(as.Date(air_date, format = '%m/%d/%Y'),'%Y')) %>% 
+  count(category, air_year, name = 'occurs')
+  
+cat_dates <- distinct_cat %>% 
+  mutate(air_year = format(as.Date(air_date, format = '%m/%d/%Y'),'%Y')) 
+
+catyr_occurs <- catyr_occurs %>% 
+  inner_join(cat_dates, by = c('category', 'air_year'))
+  
+catyr_occurs <- catyr_occurs %>% 
+  mutate(cat_index = str_remove(category, "[\'\"-*&(]")) %>% 
+  mutate(cat_index = str_remove(cat_index, "A ")) %>%
+  mutate(cat_index = str_remove(cat_index, "THE ")) %>% 
+  mutate(cat_index = substr(cat_index,0,1)) #%>% 
+  
+#write.csv(catyr_occurs, '../j_project/j_explore/catyr_occurs.csv')
+catyr_occurs <- catyr_occurs %>% 
+  filter(air_year == '2013')
+
+
+#library(treemap)
+
+#treemap(catyr_occurs, index = c('cat_index', 'category'), vSize = 'occurs', type='index')
+```
+
 
 ## Including Plots
 

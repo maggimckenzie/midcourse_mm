@@ -14,6 +14,7 @@ fj_win_scores <- read.csv('fj_win_scores.csv')
 cat_occurs <- read.csv('cat_occurs.csv')
 resp_occurs <- read.csv('resp_occurs.csv')
 clues <- read.csv('j_clues.csv')
+catyr_occurs <- read.csv('catyr_occurs.csv')
 
 #prepare data for cat_exp plot
 cat_occurs_gt1 <- cat_occurs %>% 

@@ -67,6 +67,12 @@ body <- dashboardBody(
                     width = 12,
                     girafeOutput('plot_catexp')
                 )
+            ),
+            fluidRow(
+                column(
+                    width = 12,
+                    DT::DTOutput('dt_catexp')
+                )
             )
         ),
         
@@ -85,21 +91,33 @@ body <- dashboardBody(
                     width = 12,
                     girafeOutput('plot_rspexp')
                  )
-             ),
+            ),
             fluidRow(
                 column(
                     width = 12,
-                    DT::DTOutput('dt_rsexp')
+                    DT::DTOutput('dt_rspexp')
                 )
             )
         ),
         
         tabItem(
             tabName = 'test',
+            
+            selectInput('year',
+                        'Choose a year',
+                        multiple = FALSE,
+                        selected = sort(unique(catyr_occurs$air_year))[1],
+                        choices = sort(unique(catyr_occurs$air_year))
+            ),
+            
+            uiOutput('index'),
+            
+            uiOutput('categories'),
+            
             fluidRow(
                 column(
                     width = 12,
-                    textOutput('placeholder_test')
+                    DT::DTOutput('dt_category')
                 )
             )
         ),
