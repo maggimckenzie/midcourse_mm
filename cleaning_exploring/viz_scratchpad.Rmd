@@ -48,7 +48,7 @@ game_dates <- game_data %>%
 
 Join the winners and air dates
 ```{r merge_airdates}
-fj_win_scores <- fj_win_scores %>% 
+fj_win_scores <- fj_win_scores %>%
   inner_join(game_dates, by = 'show_num')
 
 fj_win_scores <- fj_win_scores %>% 
@@ -65,13 +65,62 @@ write.csv(fj_win_scores, '../data/fj_win_scores.csv', row.names=FALSE)
 
 Plot the distribution of scores
 ```{r score_dist}
-fj_win_scores %>% 
-  select(show_num, season, air_year, contestant, bucket_name, score) %>% 
-  ggplot(aes(y = air_year, x = score, color = bucket_name)) +
-  geom_point()+
-  scale_x_continuous(breaks=seq(0, 150000, 10000)) +
-  theme(axis.text.x = element_text(angle= 90))
+#cat_occurs_gt1$text <- paste('Category: ',cat_occurs_gt1$category, '\n', 'Games Appearing: ',cat_occurs_gt1$occurs, '\n', 'Pct of Games: ', #cat_occurs_gt1$pct_of_games)
 
+#geom_polygon_interactive(data = cat.gg, aes(x, y, group = id, fill = id, tooltip = cat_occurs_gt1$text[id], data_id = id),  alpha = 0.6)+
+#fj_win_scores <- read.csv('../data/fj_win_scores.csv')
+fj_win_scores <-fj_win_scores %>% 
+  mutate(text1 = paste('Player: ', contestant, '\n', 'Score: $', formatC(score, big.mark=',')))
+fj_win_scores
+  
+p_s<-fj_win_scores %>%
+  filter(season >= 18) %>%
+  select(show_num, season, air_year, contestant, bucket_name, score, text1) %>% 
+  ggplot()+
+  geom_point_interactive(aes(x = air_year, y = score, color = bucket_name, tooltip = text1), alpha = .6, position = 'jitter') +
+  scale_color_viridis(discrete = TRUE)+
+  #geom_point_interactive(alpha = .4, position = 'jitter')+
+  scale_y_continuous('Score', breaks=seq(0, 140000, 20000), labels=scales::dollar_format()) +
+  scale_x_continuous('Year', breaks=seq(2001, 2021, 1))+
+  theme(axis.text.x = element_text(angle= 90), legend.position = 'none')
+
+widg_s <- ggiraph(ggobj = p_s, bg='transparent'#, width_svg = 10, height_svg = 10
+                )
+widg_s
+```
+```{r}
+fj_median <- fj_win_scores %>% 
+  select(season, air_year, score) %>%
+  filter(air_year >=2001 & season >= 18) %>% 
+  group_by(air_year) %>% 
+  summarize(median_score = median(score), mean_score = mean(score), 
+            high_score = max(score))
+
+p_m_names <- fj_win_scores %>% 
+  group_by(air_year) %>% 
+  filter(score == max(score)) %>% 
+  select(air_year, contestant, score)
+
+fj_median <- fj_median %>% 
+  left_join(p_m_names, by = c('air_year', 'high_score' = 'score'))
+
+fj_median <-fj_median %>% rename('high_scorer' = 'contestant')
+
+p_m <- fj_median %>% 
+  ggplot(aes(x = Year, y = Score))+
+  geom_point_interactive(aes(x = air_year, y = high_score, col = 'high_score', tooltip = high_scorer), size = 2)+
+  geom_line(aes(x = air_year, y = high_score, col = 'high_score'), size = 2)+
+  #geom_line(aes(x = air_year, y = mean_score, col = 'mean_score'))+
+  geom_point_interactive(aes(x = air_year, y = median_score, col = 'median_score'), size = 2)+
+  geom_line(aes(x = air_year, y = median_score, col = 'median_score'), size = 2)+
+  scale_color_viridis(discrete = TRUE, begin = .2, end = .6, labels = c('High Score', 'Median Score'))+
+  scale_y_continuous('Score', breaks=seq(0, 140000, 20000), labels=scales::dollar_format()) +
+  scale_x_continuous('Year', breaks=seq(2001, 2021, 1))+
+  theme(axis.text.x = element_text(angle= 90), legend.position = 'bottom', legend.title = element_blank(), panel.grid.minor = element_blank() )
+
+widg_m <- ggiraph(ggobj = p_m, bg='transparent'#, width_svg = 10, height_svg = 10
+                )
+widg_m
 ```
 
 
@@ -86,6 +135,104 @@ fj_win_scores %>%
   #scale_y_discrete()
   #theme(axis.text.x = element_text(angle= 90))
 ```
+```{r}
+fj_win_scores %>% 
+  filter(season >=18) %>% 
+  summarize(enframe(quantile(score, c(.25, .5, .75, .9, .99)), 'quantile','score'))
+
+```
+```{r}
+high_scoring <- fj_win_scores %>% 
+  filter(season >=18 & score >= 50000) %>% 
+  select(show_num, score, contestant) %>% 
+  rename('winner' = 'contestant')
+high_scoring <- high_scoring %>% 
+  inner_join(clues, by= 'show_num')
+high_scoring <- high_scoring %>% 
+  filter(round_code %in% c('J', 'DJ')) %>% 
+  mutate(clue_intval = as.integer(str_remove_all(clue_value, "[$,]"))) %>% 
+  select(show_num, score, winner, round_code, cat_num, clue_num, clue_id, clue_intval, clue_value, daily_double, clue_order )
+
+first_ten_hi <- high_scoring %>% 
+  filter(clue_order <= 10) %>% 
+  group_by(round_code) %>% 
+  summarize(first_ten_mean = as.integer(mean(clue_intval)), first_ten_median = as.integer(median(clue_intval))) %>% 
+  ungroup() %>% 
+  mutate(type = 'High Scoring Games')
+
+dd_hi <- high_scoring %>% 
+  filter(daily_double == 'TRUE') %>% 
+  group_by(round_code) %>% 
+  summarize(dd_mean = as.integer(mean(clue_intval)), dd_median = as.integer(median(clue_intval))) %>% 
+  ungroup() %>% 
+  mutate(type = 'High Scoring Games')
+```
+
+
+```{r}
+low_scoring <- fj_win_scores %>% 
+  filter(season >=18 & score < 50000) %>% 
+  select(show_num, score, contestant) %>% 
+  rename('winner' = 'contestant')
+low_scoring <- low_scoring %>% 
+  inner_join(clues, by= 'show_num')
+low_scoring <- low_scoring %>% 
+  filter(round_code %in% c('J', 'DJ')) %>% 
+  mutate(clue_intval = as.integer(str_remove_all(clue_value, "[$,]"))) %>% 
+  select(show_num, score, winner, round_code, cat_num, clue_num, clue_id, clue_intval, clue_value, daily_double, clue_order )
+
+first_ten_lo <- low_scoring %>% 
+  filter(clue_order <= 10) %>% 
+  mutate(type = 'Low Scoring Games') %>% 
+  group_by(round_code) %>%
+  summarize(first_ten_mean = as.integer(mean(clue_intval)), first_ten_median = as.integer(median(clue_intval))) %>% 
+  ungroup() %>% 
+  mutate(type = 'Low Scoring Games')
+
+dd_lo <- low_scoring %>% 
+  filter(daily_double == 'TRUE') %>% 
+  mutate(type = 'Low Scoring Games') %>% 
+  group_by(round_code) %>% 
+  summarize(dd_mean = as.integer(mean(clue_intval)), dd_median = as.integer(median(clue_intval))) %>% 
+  ungroup() %>% 
+  mutate(type = 'Low Scoring Games')
+```
+```{r}
+hilo_comp<- first_ten_hi%>% 
+  inner_join(dd_hi, by = c('round_code', 'type'))
+temp_comp <- first_ten_lo %>% 
+  inner_join(dd_lo, by = c('round_code', 'type'))
+hilo_comp <- bind_rows(hilo_comp, temp_comp)
+
+write.csv(hilo_comp, '../data/hilo_comp.csv', row.names = FALSE)
+```
+
+```{r}
+p_t<-hilo_comp %>% 
+  ggplot()+
+  geom_bar(aes(x = round_code, y = first_ten_mean, fill = type), position = 'dodge', stat = 'identity') +
+  scale_fill_viridis(discrete = TRUE, begin = .6, end = .2) +
+  scale_y_continuous('Mean Clue Value', labels=scales::dollar_format())+
+  scale_x_discrete(name = element_blank(),labels=c('Double Jeopardy!', 'Jeopardy!'))+
+  theme(legend.position = 'bottom', plot.background = element_rect(fill='transparent', color = NA),
+        panel.background = element_rect(fill = 'transparent', color = NA), legend.title = element_blank())
+widg_t <- ggiraph(ggobj = p_t, bg='transparent')
+widg_t
+
+p_d <- hilo_comp %>% 
+  ggplot()+
+  geom_bar(aes(x = round_code, y = dd_mean, fill = type), position = 'dodge', stat = 'identity') +
+  scale_fill_viridis(discrete = TRUE, begin = .6, end = .2) +
+  scale_y_continuous('Mean Daily Double Wager', labels=scales::dollar_format())+
+  scale_x_discrete(name = element_blank(),labels=c('Double Jeopardy!', 'Jeopardy!'))+
+  theme(legend.position = 'bottom', plot.background = element_rect(fill='transparent', color = NA),
+        panel.background = element_rect(fill = 'transparent', color = NA), legend.title = element_blank())
+widg_d <- ggiraph(ggobj = p_d, bg='transparent')
+widg_d
+  
+  
+```
+
 
 Category explorer
 ```{r category_exp}
@@ -152,6 +299,8 @@ widg
 #   theme_void() +
 #   theme(legend.position = 'none') + 
 #   coord_equal()
+
+
 ```
 
 Response explorer
@@ -191,7 +340,7 @@ p_r<- ggplot()+
   geom_text(data = resp_occurs_gt1, aes(x, y, label = corr_resp), size=2, color='black') + 
   theme_void()+
   theme(legend.position='none', plot.margin=unit(c(0,0,0,0),'cm'), panel.background = element_rect(fill = 'transparent', color = NA))+
-  coord_equal()
+  coord_equal(ratio = 1)
 
 widg_r <- ggiraph(ggobj = p_r, bg='transparent'#, width_svg = 10, height_svg = 10
                 )

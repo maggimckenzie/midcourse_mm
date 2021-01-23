@@ -15,6 +15,7 @@ cat_occurs <- read.csv('cat_occurs.csv')
 resp_occurs <- read.csv('resp_occurs.csv')
 clues <- read.csv('j_clues.csv')
 catyr_occurs <- read.csv('catyr_occurs.csv')
+hilo_comp <- read.csv('hilo_comp.csv')
 
 #prepare data for cat_exp plot
 cat_occurs_gt1 <- cat_occurs %>% 
@@ -40,6 +41,26 @@ packing_r$radius <- 0.95 * packing_r$radius
 resp_occurs_gt1 <- cbind(resp_occurs_gt1, packing_r)
 resp.gg <- circleLayoutVertices(packing_r, npoints=50)
 
+#prepare data for scores plot
+fj_scores <- fj_win_scores %>% 
+  mutate(text1 = paste('Player: ', contestant, '\n', 'Score: $', formatC(score, big.mark=','))) %>% 
+  filter(season >=18) %>% 
+  select(show_num, season, air_year, contestant, bucket_name, score, text1)
+
+#prepare data for high scores plot
+fj_median <- fj_win_scores %>% 
+  select(season, air_year, score) %>%
+  filter(air_year >=2001 & season >= 18) %>% 
+  group_by(air_year) %>% 
+  summarize(median_score = median(score), mean_score = mean(score), 
+            high_score = max(score))
+p_m_names <- fj_win_scores %>% 
+  group_by(air_year) %>% 
+  filter(score == max(score)) %>% 
+  select(air_year, contestant, score)
+fj_median <- fj_median %>% 
+  left_join(p_m_names, by = c('air_year', 'high_score' = 'score'))
+fj_median <-fj_median %>% rename('high_scorer' = 'contestant')
 
 
 custom_colors<-c("#e4941b",
