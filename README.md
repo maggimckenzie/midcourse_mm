@@ -20,6 +20,6 @@ The data set includes 375,000 clues and answers and 81,000 distinct categories, 
 
 ## **Acknowledgments**
 
-This project would not be possible without the work of the fans who maintain the J! Archive. Thanks to them and to all the people at people at Jeopardy Productions, Inc. and Sony Pictures who make Jeopardy! so much fun for viewers and contestants alike.
+This project would not be possible without the work of the fans who maintain the J! Archive. Thanks to them and to all the people at Jeopardy Productions, Inc. and Sony Pictures who make Jeopardy! so much fun for viewers and contestants alike.
 
 My incredibly helpful and patient instructors and classmates in DS Cohort 4 at NSS have also been instrumental in completing this project. You're the best! Thank you all.
