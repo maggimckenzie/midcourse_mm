@@ -4,9 +4,9 @@
 
 
 ## **Origin**
-[Jeopardy!](http://jeopardy.com) is one of the most popular and longest running game shows on American television. Several editions of Jeopardy! have appeared since the 1960s, with the most recent version running from 1984 to the present (as of January, 2021). Alex Trebek hosted from 1984 until his death in 2020. I've always enjoyed trivia, and I had the opportunity to be a (losing!) contestant on Jeopardy! in 2007--something I had always wanted to do. It was a great experience.
+[Jeopardy!](http://jeopardy.com) is one of the most popular and longest running game shows on American television. [Several editions](https://en.wikipedia.org/wiki/Jeopardy!) of Jeopardy! have appeared since the 1960s, with the most recent version running from 1984 to the present (as of January, 2021). Alex Trebek hosted from 1984 until his death in 2020. I've always enjoyed trivia, and I had the opportunity to be a (losing!) contestant on Jeopardy! in 2007--something I had always wanted to do. It was a great experience.
 
-In 2019 James Holzhauer had a string of high-scoring games that broke previous scoring records, using several strategies that differed from typical game play. I developed this project based on the idea of exploring potential winning strategies that can be gleaned from analyzing Jeopardy! game data.
+In 2019 [James Holzhauer](https://en.wikipedia.org/wiki/James_Holzhauer) had a string of high-scoring games that broke previous scoring records, using several strategies that differed from typical game play. I developed this project based on the idea of exploring potential winning strategies that can be gleaned from analyzing Jeopardy! game data.
 
 ---
 
